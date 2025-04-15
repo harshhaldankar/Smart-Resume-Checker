@@ -53,7 +53,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-st.header("📈 ATS Tracking System")
+st.header("📈 Smart Resume Checker")
 uploaded_file = st.file_uploader("📤 Upload Resume (PDF)", type=["pdf"], help="We only process the first page of your resume")
 input_text = st.text_area("Job Description:", key="input")
 
