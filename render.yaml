@@ -1,0 +1,8 @@
+services:
+  - type: web
+    name: smart-resume-checker
+    runtime: python
+    buildCommand: |
+      apt-get update && apt-get install -y poppler-utils
+      pip install -r requirements.txt
+    startCommand: streamlit run app.py --server.port=$PORT --server.enableCORS=false
