@@ -1,22 +1,23 @@
+import time
+import google.generativeai as genai
+import random
+import pandas as pd
+import io
+import re
 import streamlit as st
 from dotenv import load_dotenv
 import base64
 import os
-import io
 import pdf2image
 import re
-import pandas as pd
-import plotly.express as px
-from PIL import Image
-import google.generativeai as genai
+import datetime
 
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 
-# Set Streamlit to use the dark theme
 st.set_page_config(page_title="Smart Resume Dashboard", layout="wide", initial_sidebar_state="expanded")
 
-# Set the default theme to dark mode (using Streamlit's built-in theme config)
+# Dark theme styling
 st.markdown(
     """
     <style>
@@ -27,14 +28,14 @@ st.markdown(
     .stButton > button {
         border-radius: 10px;
         padding: 10px 20px;
-        background-color: #28a745; /* Green color */
+        background-color: #28a745;
         color: white;
         font-weight: bold;
         border: none;
-        width: 100%; /* Ensures all buttons have the same length */
+        width: 100%;
     }
     .stButton > button:hover {
-        background-color: #218838; /* Darker green on hover */
+        background-color: #218838;
     }
     .stTextArea textarea, .stTextInput input {
         background-color: #333;
@@ -51,12 +52,27 @@ st.markdown(
     </style>
     """, unsafe_allow_html=True)
 
-# Helper functions
-def get_gemini_response(input_text, pdf_content, prompt):
-    model = genai.GenerativeModel('gemini-1.5-flash')
-    response = model.generate_content([input_text, pdf_content[0], prompt])
-    return response.text
+# Helper function to handle retries
+def get_gemini_response_with_retry(input_text, pdf_content, prompt, max_retries=3, backoff_factor=2):
+    retries = 0
+    while retries < max_retries:
+        try:
+            # Make the API request
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            response = model.generate_content([input_text, pdf_content[0], prompt])
+            return response.text
+        except Exception as e:
+            if "429" in str(e):  # Check if it's a rate limit error
+                retries += 1
+                wait_time = backoff_factor ** retries + random.uniform(0, 1)  # Exponential backoff with some randomness
+                st.warning(f"Rate limit exceeded, retrying in {wait_time:.2f} seconds...")
+                time.sleep(wait_time)
+            else:
+                st.error(f"An error occurred: {e}")
+                break
+    return None
 
+# Helper functions
 def input_pdf_setup(uploaded_file):
     images = pdf2image.convert_from_bytes(uploaded_file.read())
     first_page = images[0]
@@ -118,13 +134,13 @@ if mode == "Single Resume Analyzer":
 
         if analyze_btn:
             with st.spinner("Analyzing resume..."):
-                result = get_gemini_response(input_text, pdf_content, prompts["analysis"])
+                result = get_gemini_response_with_retry(input_text, pdf_content, prompts["analysis"])
                 st.subheader("📝 Analysis Report")
                 st.write(result)
 
         elif match_btn:
             with st.spinner("Calculating match percentage..."):
-                result = get_gemini_response(input_text, pdf_content, prompts["match"])
+                result = get_gemini_response_with_retry(input_text, pdf_content, prompts["match"])
                 st.subheader("📊 Match Percentage")
                 match_score = int(re.search(r"\d+", result).group())
                 st.progress(match_score)
@@ -132,13 +148,13 @@ if mode == "Single Resume Analyzer":
 
         elif improve_btn:
             with st.spinner("Improving resume..."):
-                result = get_gemini_response(input_text, pdf_content, prompts["improve"])
+                result = get_gemini_response_with_retry(input_text, pdf_content, prompts["improve"])
                 st.subheader("📌 Recommendations")
                 st.markdown(result, unsafe_allow_html=True)
 
         elif skills_btn:
             with st.spinner("Finding learning resources..."):
-                result = get_gemini_response(input_text, pdf_content, prompts["skills"])
+                result = get_gemini_response_with_retry(input_text, pdf_content, prompts["skills"])
                 st.subheader("🎯 Skill Development Resources")
                 st.markdown(result, unsafe_allow_html=True)
 
@@ -146,12 +162,70 @@ elif mode == "Bulk Resume Ranker":
     st.title("📊 Bulk Resume Ranker")
     st.markdown("Upload multiple resumes and get ranked matches with contact details.")
 
+    MAX_RESUMES = 15
+    st.markdown("⚠️ **Note:** You can upload up to 15 resumes at a time.")
+
     job_description = st.text_area("Job Description (for bulk analysis)")
     uploaded_files = st.file_uploader("Upload Resumes (PDFs)", type=["pdf"], accept_multiple_files=True)
 
+    if uploaded_files:
+        st.markdown(f"📄 **Total Resumes Uploaded:** {len(uploaded_files)}")
+        if len(uploaded_files) > MAX_RESUMES:
+            st.error(f"❌ Limit exceeded! Please upload no more than {MAX_RESUMES} resumes.")
+            st.stop()
+
+        eta_placeholder = st.empty()
+
     min_score = st.slider("Minimum Match %", 0, 100, 0)
 
-    ranked_candidates = []
+    # Function to batch process resumes
+    def process_resumes_in_batches(uploaded_files, job_description, prompts, batch_size=5):
+        ranked_candidates = []
+        total_files = len(uploaded_files)
+        num_batches = (total_files // batch_size) + (1 if total_files % batch_size > 0 else 0)
+
+        # Process each batch sequentially
+        for batch_num in range(num_batches):
+            batch_files = uploaded_files[batch_num * batch_size: (batch_num + 1) * batch_size]
+
+            for file in batch_files:
+                try:
+                    # Read PDF and get the content
+                    pdf_content = input_pdf_setup(file)
+
+                    # Get match percentage
+                    match_result = get_gemini_response_with_retry(job_description, pdf_content, prompts["match"])
+                    if match_result is None:
+                        continue
+                    match = int(re.search(r"\d+", match_result).group())
+
+                    # Get contact details
+                    contact_result = get_gemini_response_with_retry("", pdf_content, prompts["contact"])
+                    if contact_result is None:
+                        continue
+
+                    name = re.search(r"Name:\s*(.*)", contact_result)
+                    email = re.search(r"Email:\s*(.*)", contact_result)
+                    phone = re.search(r"Phone:\s*(.*)", contact_result)
+
+                    candidate = {
+                        "filename": file.name,
+                        "match": match,
+                        "name": name.group(1).strip() if name else "N/A",
+                        "email": email.group(1).strip() if email else "N/A",
+                        "phone": phone.group(1).strip() if phone else "N/A",
+                    }
+                    ranked_candidates.append(candidate)
+
+                except Exception as e:
+                    continue
+
+            # Simulate some delay between batches to avoid hitting rate limits
+            time.sleep(10)  # Add a 5-second delay between batches (you can adjust this time)
+            ranked_candidates.sort(key=lambda x: x['match'], reverse=True)
+
+    
+        return ranked_candidates
 
     if st.button("🚀 Analyze All Resumes"):
         if not job_description:
@@ -160,59 +234,40 @@ elif mode == "Bulk Resume Ranker":
             st.warning("Please upload at least one resume.")
         else:
             with st.spinner("Processing resumes..."):
-                for file in uploaded_files:
-                    try:
-                        pdf_content = input_pdf_setup(file)
-                        match_result = get_gemini_response(job_description, pdf_content, prompts["match"])
-                        match = int(re.search(r"\d+", match_result).group())
+                start_time = time.time()
 
-                        contact_result = get_gemini_response("", pdf_content, prompts["contact"])
-                        name = re.search(r"Name:\s*(.*)", contact_result)
-                        email = re.search(r"Email:\s*(.*)", contact_result)
-                        phone = re.search(r"Phone:\s*(.*)", contact_result)
+                # Process resumes in batches
+                ranked_candidates = process_resumes_in_batches(uploaded_files, job_description, prompts)
 
-                        candidate = {
-                            "filename": file.name,
-                            "match": match,
-                            "name": name.group(1).strip() if name else "N/A",
-                            "email": email.group(1).strip() if email else "N/A",
-                            "phone": phone.group(1).strip() if phone else "N/A",
-                        }
-                        ranked_candidates.append(candidate)
+                st.success("✅ Bulk analysis complete")
 
-                    except Exception as e:
-                        st.error(f"Error processing {file.name}: {e}")
+                # Create a DataFrame from the ranked candidates
+                df = pd.DataFrame(ranked_candidates)
+                filtered_df = df[df['match'] >= min_score]
 
-            ranked_candidates = sorted(ranked_candidates, key=lambda x: x['match'], reverse=True)
-            st.success("✅ Bulk analysis complete")
+                st.subheader("📋 Ranked Candidates")
+                for idx, row in filtered_df.iterrows():
+                    with st.container():
+                        st.markdown(f"### {row['name']}")
+                        st.progress(row['match'])
+                        st.markdown(f"**Match:** {row['match']}%")
+                        st.markdown(f"📧 {row['email']}")
+                        st.markdown(f"📱 {row['phone']}")
+                        st.markdown("---")
 
-            df = pd.DataFrame(ranked_candidates)
-            filtered_df = df[df['match'] >= min_score]
+                st.sidebar.title("📇 Contacts")
+                for idx, row in filtered_df.iterrows():
+                    st.sidebar.markdown(f"**{row['name']}**")
+                    st.sidebar.markdown(f"📧 {row['email']}")
+                    st.sidebar.markdown(f"📱 {row['phone']}")
+                    st.sidebar.markdown(f"Match: {row['match']}%")
+                    st.sidebar.markdown("---")
 
-            st.subheader("📋 Ranked Candidates")
-            for idx, row in filtered_df.iterrows():
-                with st.container():
-                    st.markdown(f"### {row['name']}")
-                    st.progress(row['match'])
-                    st.markdown(f"**Match:** {row['match']}%")
-                    st.markdown(f"📧 {row['email']}")
-                    st.markdown(f"📱 {row['phone']}")
-                    st.markdown("---")
-
-            st.sidebar.title("📇 Contacts")
-            for idx, row in filtered_df.iterrows():
-                st.sidebar.markdown(f"**{row['name']}**")
-                st.sidebar.markdown(f"📧 {row['email']}")
-                st.sidebar.markdown(f"📱 {row['phone']}")
-                st.sidebar.markdown(f"Match: {row['match']}%")
-                st.sidebar.markdown("---")
-
-
-            # Export results
-            csv = df.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label="📥 Download Results as CSV",
-                data=csv,
-                file_name="ranked_candidates.csv",
-                mime="text/csv"
-            )
+                # Provide a download option for the results
+                csv = df.to_csv(index=False).encode('utf-8')
+                st.download_button(
+                    label="📥 Download Results as CSV",
+                    data=csv,
+                    file_name="ranked_candidates.csv",
+                    mime="text/csv"
+                )
