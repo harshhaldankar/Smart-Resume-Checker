@@ -1,3 +1,4 @@
+import numpy as np
 import time
 import google.generativeai as genai
 import random
