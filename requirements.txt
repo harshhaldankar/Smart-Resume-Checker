@@ -4,7 +4,6 @@ pdf2image
 Pillow
 google-generativeai
 PyMuPDF
-plotly
 time
 datetime
 re
