@@ -5,3 +5,7 @@ Pillow
 google-generativeai
 PyMuPDF
 plotly
+time
+datetime
+re
+base64
