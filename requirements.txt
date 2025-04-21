@@ -3,7 +3,6 @@ python-dotenv
 pdf2image
 Pillow
 google-generativeai
-PyMuPDF
 time
 datetime
 re
