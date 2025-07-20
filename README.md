@@ -4,7 +4,6 @@ An AI-powered resume analysis tool that helps job seekers optimize their resumes
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](your-deployed-app-url-here)
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## 🚀 Features
 
@@ -121,52 +120,6 @@ Smart-Resume-Checker/
 4. **Recommendations**: Provides detailed improvement suggestions
 5. **Skill Analysis**: Identifies skill gaps and development opportunities
 6. **Results Display**: Shows comprehensive analysis with visual insights
-
-## 🎥 Adding Demo Video
-
-To add a demonstration video to your README:
-
-### Option 1: Upload to GitHub (Recommended)
-
-1. Create a short demo video (2-3 minutes) showing:
-   - Uploading a resume
-   - Analysis results
-   - Key features in action
-
-2. Upload the video to your repository:
-   ```bash
-   mkdir assets
-   # Add your demo.mp4 file to the assets folder
-   git add assets/demo.mp4
-   git commit -m "Add demo video"
-   git push
-   ```
-
-3. Update the demo section in README:
-   ```markdown
-   ## 🎥 Demo
-   
-   https://github.com/harshhaldankar/Smart-Resume-Checker/assets/demo.mp4
-   ```
-
-### Option 2: Use GitHub Releases
-
-1. Create a new release in your GitHub repository
-2. Attach your demo video to the release
-3. Use the download URL in your README
-
-### Option 3: External Hosting
-
-You can also host your demo video on:
-- YouTube (then embed)
-- Loom
-- Vimeo
-- Google Drive (with public access)
-
-Example with YouTube:
-```markdown
-[![Demo Video](https://img.youtube.com/vi/YOUR_VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=YOUR_VIDEO_ID)
-```
 
 ## 📸 Screenshots
 
