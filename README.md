@@ -1,7 +1,3 @@
-
-
-
-
 # 🎯 Smart Resume Checker
 
 An AI-powered resume analysis tool that helps job seekers optimize their resumes for better ATS (Applicant Tracking System) compatibility and overall improvement.
@@ -129,14 +125,13 @@ Smart-Resume-Checker/
 ## 📸 Screenshots
 
 ### Main Interface
-![Main Interface](<img width="1915" height="852" alt="Screenshot 2025-04-18 025449" src="https://github.com/user-attachments/assets/d4772140-b68d-4d19-9681-7f78ab211750" />
-)
+![Main Interface]<img width="1915" height="852" alt="Screenshot 2025-04-18 025449" src="https://github.com/user-attachments/assets/d4772140-b68d-4d19-9681-7f78ab211750" />
+
 
 ### Analysis Results
-![Analysis Results](<img width="1439" height="834" alt="Screenshot 2025-04-18 025749" src="https://github.com/user-attachments/assets/2f02acf6-d8ed-4cff-b496-b4aac6563d7d" />
-)
+![Analysis Results]<img width="1439" height="834" alt="Screenshot 2025-04-18 025749" src="https://github.com/user-attachments/assets/2f02acf6-d8ed-4cff-b496-b4aac6563d7d" />
+
 
 ### ATS Score
-![ATS Score](<img width="1403" height="432" alt="Screenshot 2025-04-18 025737" src="https://github.com/user-attachments/assets/d7fde5dd-eae0-46d4-8a5b-97094c68a3a0" />)
-```
+![ATS Score]<img width="1403" height="432" alt="Screenshot 2025-04-18 025737" src="https://github.com/user-attachments/assets/d7fde5dd-eae0-46d4-8a5b-97094c68a3a0" />
 
