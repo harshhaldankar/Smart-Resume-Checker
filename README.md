@@ -25,7 +25,7 @@ https://github.com/user-attachments/assets/4bd5841d-e99b-41ac-8ba6-2200180375bb
 - **AI/ML**: Google Gemini API
 - **PDF Processing**: PyPDF2 or similar
 - **Python**: 3.8+
-- **Deployment**: Render.com
+- **Deployment**: streamlit Cloud
 
 ## 📋 Prerequisites
 
@@ -82,31 +82,20 @@ The application will open in your default web browser at `http://localhost:8501`
 
 ## 🚀 Deployment
 
-### Deploy on Render.com
+### Deploy on Streamlit Cloud
 
 1. Fork this repository
-2. Create a new Web Service on [Render.com](https://render.com)
+2. Create a App on [Streamlit Cloud](streamlit.io)
 3. Connect your GitHub repository
-4. Use the provided `render.yaml` configuration
-5. Add your `GOOGLE_API_KEY` in Render's Environment Variables
+4. Add your `GOOGLE_API_KEY` in secrets
 6. Deploy!
-
-### Deploy on Other Platforms
-
-The application can also be deployed on:
-- Heroku
-- Streamlit Cloud
-- Google Cloud Platform
-- AWS
-- Azure
 
 ## 📁 Project Structure
 
 ```
 Smart-Resume-Checker/
-├── app.py                 # Main Streamlit application
-├── requirements.txt       # Python dependencies
-├── render.yaml           # Render.com deployment configuration
+├── app.py                # Main Streamlit application
+├── requirements.txt      # Python dependencies          
 ├── .env.example          # Environment variables template
 ├── README.md             # Project documentation
 └── assets/               # Images and demo files
