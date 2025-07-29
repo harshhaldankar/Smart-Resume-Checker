@@ -13,6 +13,7 @@ import pdf2image
 import re
 import datetime
 import fitz
+import frontend
 
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
