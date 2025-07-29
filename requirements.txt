@@ -7,6 +7,6 @@ plotly
 python-dotenv
 google-generativeai
 fitz
-
+frontend
 
 
