@@ -1,12 +1,11 @@
 streamlit
 numpy
 pandas
-pdf2image
 Pillow
 plotly
 python-dotenv
 google-generativeai
-fitz
-frontend
+pymupdf
+
 
 
