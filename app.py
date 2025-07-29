@@ -12,6 +12,7 @@ import os
 import pdf2image
 import re
 import datetime
+import fitz
 
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
@@ -75,15 +76,17 @@ def get_gemini_response_with_retry(input_text, pdf_content, prompt, max_retries=
 
 # Helper functions
 def input_pdf_setup(uploaded_file):
-    images = pdf2image.convert_from_bytes(uploaded_file.read())
-    first_page = images[0]
-    img_byte_arr = io.BytesIO()
-    first_page.save(img_byte_arr, format='JPEG')
-    img_byte_arr = img_byte_arr.getvalue()
-    return [{
-        "mime_type": "image/jpeg",
-        "data": base64.b64encode(img_byte_arr).decode()
-    }]
+    try:
+        # Read PDF file using PyMuPDF
+        pdf_bytes = uploaded_file.read()
+        doc = fitz.open(stream=pdf_bytes, filetype="pdf")
+        text = ""
+        for page in doc:
+            text += page.get_text()
+        return [text.strip()]
+    except Exception as e:
+        st.error(f"Error reading PDF: {e}")
+        return [""]
 
 # Prompts
 prompts = {
