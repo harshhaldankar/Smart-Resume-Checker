@@ -113,22 +113,22 @@ prompts = {
 }
 
 # Navigation
-st.sidebar.title("🧭 Navigation")
+st.sidebar.title("Navigation")
 mode = st.sidebar.radio("Choose Mode", ["Single Resume Analyzer", "Bulk Resume Ranker"])
 
 if mode == "Single Resume Analyzer":
-    st.title("📈 ATS Tracking System")
+    st.title("ATS Tracking System")
     st.markdown("Upload a single resume and compare it with your target job.")
-    uploaded_file = st.file_uploader("📤 Upload Resume (PDF)", type=["pdf"])
+    uploaded_file = st.file_uploader("Upload Resume (PDF)", type=["pdf"])
     input_text = st.text_area("Job Description")
 
     col1, col2 = st.columns(2)
     with col1:
-        analyze_btn = st.button("🔍 Resume Analysis")
-        match_btn = st.button("✅ Percentage Match")
+        analyze_btn = st.button("Resume Analysis")
+        match_btn = st.button("Percentage Match")
     with col2:
-        improve_btn = st.button("💡 Improve Resume")
-        skills_btn = st.button("🎓 Skill Recommendations")
+        improve_btn = st.button("Improve Resume")
+        skills_btn = st.button("Skill Recommendations")
 
     if uploaded_file:
         pdf_content = input_pdf_setup(uploaded_file)
@@ -136,13 +136,13 @@ if mode == "Single Resume Analyzer":
         if analyze_btn:
             with st.spinner("Analyzing resume..."):
                 result = get_gemini_response_with_retry(input_text, pdf_content, prompts["analysis"])
-                st.subheader("📝 Analysis Report")
+                st.subheader("Analysis Report")
                 st.write(result)
 
         elif match_btn:
             with st.spinner("Calculating match percentage..."):
                 result = get_gemini_response_with_retry(input_text, pdf_content, prompts["match"])
-                st.subheader("📊 Match Percentage")
+                st.subheader("Match Percentage")
                 match_score = int(re.search(r"\d+", result).group())
                 st.progress(match_score)
                 st.write(f"{match_score}%")
@@ -150,29 +150,29 @@ if mode == "Single Resume Analyzer":
         elif improve_btn:
             with st.spinner("Improving resume..."):
                 result = get_gemini_response_with_retry(input_text, pdf_content, prompts["improve"])
-                st.subheader("📌 Recommendations")
+                st.subheader("Recommendations")
                 st.markdown(result, unsafe_allow_html=True)
 
         elif skills_btn:
             with st.spinner("Finding learning resources..."):
                 result = get_gemini_response_with_retry(input_text, pdf_content, prompts["skills"])
-                st.subheader("🎯 Skill Development Resources")
+                st.subheader("Skill Development Resources")
                 st.markdown(result, unsafe_allow_html=True)
 
 elif mode == "Bulk Resume Ranker":
-    st.title("📊 Bulk Resume Ranker")
+    st.title("Bulk Resume Ranker")
     st.markdown("Upload multiple resumes and get ranked matches with contact details.")
 
     MAX_RESUMES = 15
-    st.markdown("⚠️ **Note:** You can upload up to 15 resumes at a time.")
+    st.markdown("⚠**Note:** You can upload up to 15 resumes at a time.")
 
     job_description = st.text_area("Job Description (for bulk analysis)")
     uploaded_files = st.file_uploader("Upload Resumes (PDFs)", type=["pdf"], accept_multiple_files=True)
 
     if uploaded_files:
-        st.markdown(f"📄 **Total Resumes Uploaded:** {len(uploaded_files)}")
+        st.markdown(f"**Total Resumes Uploaded:** {len(uploaded_files)}")
         if len(uploaded_files) > MAX_RESUMES:
-            st.error(f"❌ Limit exceeded! Please upload no more than {MAX_RESUMES} resumes.")
+            st.error(f"Limit exceeded! Please upload no more than {MAX_RESUMES} resumes.")
             st.stop()
 
         eta_placeholder = st.empty()
@@ -228,7 +228,7 @@ elif mode == "Bulk Resume Ranker":
     
         return ranked_candidates
 
-    if st.button("🚀 Analyze All Resumes"):
+    if st.button("Analyze All Resumes"):
         if not job_description:
             st.warning("Please enter a job description first.")
         elif not uploaded_files:
@@ -240,34 +240,34 @@ elif mode == "Bulk Resume Ranker":
                 # Process resumes in batches
                 ranked_candidates = process_resumes_in_batches(uploaded_files, job_description, prompts)
 
-                st.success("✅ Bulk analysis complete")
+                st.success("Bulk analysis complete")
 
                 # Create a DataFrame from the ranked candidates
                 df = pd.DataFrame(ranked_candidates)
                 filtered_df = df[df['match'] >= min_score]
 
-                st.subheader("📋 Ranked Candidates")
+                st.subheader("Ranked Candidates")
                 for idx, row in filtered_df.iterrows():
                     with st.container():
                         st.markdown(f"### {row['name']}")
                         st.progress(row['match'])
                         st.markdown(f"**Match:** {row['match']}%")
-                        st.markdown(f"📧 {row['email']}")
-                        st.markdown(f"📱 {row['phone']}")
+                        st.markdown(f"{row['email']}")
+                        st.markdown(f"{row['phone']}")
                         st.markdown("---")
 
-                st.sidebar.title("📇 Contacts")
+                st.sidebar.title("Contacts")
                 for idx, row in filtered_df.iterrows():
                     st.sidebar.markdown(f"**{row['name']}**")
-                    st.sidebar.markdown(f"📧 {row['email']}")
-                    st.sidebar.markdown(f"📱 {row['phone']}")
+                    st.sidebar.markdown(f"{row['email']}")
+                    st.sidebar.markdown(f"{row['phone']}")
                     st.sidebar.markdown(f"Match: {row['match']}%")
                     st.sidebar.markdown("---")
 
                 # Provide a download option for the results
                 csv = df.to_csv(index=False).encode('utf-8')
                 st.download_button(
-                    label="📥 Download Results as CSV",
+                    label="Download Results as CSV",
                     data=csv,
                     file_name="ranked_candidates.csv",
                     mime="text/csv"
